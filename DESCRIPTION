@@ -4,7 +4,7 @@ Version: 1.0
 Date: 13 November 2025
 Language: en-UK
 Imports: terra
-URL:
+URL: https://github.com/fmhofmann/SHME
 Authors@R: 
     person("Felix Martin", "Hofmann", role = c("aut", "cre"), email = "fmhofmann9892@gmail.com", comment = c(ORCID = "0000-0002-9882-2613"))
 Description: This package allows the user to obtain metrics of snowpatch hollows with the aid of a digital elevation model.
@@ -12,3 +12,4 @@ License: CC BY-NC 4.0
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
+BugReports: https://github.com/fmhofmann/SHME/issues

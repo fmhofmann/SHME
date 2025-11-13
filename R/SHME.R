@@ -241,7 +241,6 @@ SHME_basin_related_metrics = function(dem, snowpatch_hollows){
 
   list = list(snowpatch_hollow_metrics_1 = snowpatch_hollow_metrics)
   return(invisible(list2env(list, envir = globalenv()))) # Return the vectors to the global environment
-
 }
 
 #' Extract axes-related metrics of snowpatch hollows #
