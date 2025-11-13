@@ -4,6 +4,8 @@ What you just need to run the two function is a digital elevation model (DEM) of
 
 If you have further questions on the toolbox, please reach out: felix.martin.hofmann@geologie.uni-freiburg.de
 
+Note that there will be soon a paper on the performance of the toolbox presented here.
+
 ## Installation
 
 `TopoShieldCalc` is available from GitHub, so you can use the following code to get the current *released version*:
