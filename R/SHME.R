@@ -457,7 +457,7 @@ SHME_axes_related_metrics = function(dem,
                          filetype = "ESRI Shapefile",
                          overwrite = TRUE)
 
-      # 9. Calculate the processing time and remove unnecessary elements in the environment #
+      # 9. Calculate the processing time #
 
       end_time = Sys.time()
       processing_time = as.vector(difftime(end_time,
@@ -637,7 +637,7 @@ SHME_axes_related_metrics_2 = function(dem,
                          filetype = "ESRI Shapefile",
                          overwrite = TRUE)
 
-      # 8. Calculate the processing time and remove unnecessary elements in the environment #
+      # 8. Calculate the processing time #
 
       end_time = Sys.time()
       processing_time = as.vector(difftime(end_time,
