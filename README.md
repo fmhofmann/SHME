@@ -6,8 +6,6 @@ If you have further questions on the toolbox, please reach out: felix.martin.hof
 
 Note that there will be soon a paper on the performance of the toolbox presented here.
 
-Also note that a function for axes-related snowpatch hollow metrics extraction which relies on user-defined focus points will be available soon.
-
 ## Installation
 
 `TopoShieldCalc` is available from GitHub, so you can use the following code to get the current *released version*:
