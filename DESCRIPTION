@@ -1,6 +1,10 @@
 Package: SHME
 Title: Automatic Snowpatch Hollow Metrics Extraction in a geographic information system (GIS) environment.
+<<<<<<< HEAD
 Version: 1.1
+=======
+Version: 1.10
+>>>>>>> 4c6d6f28b43f3cea6d4048bb81874159bc6a7430
 Date: 13 November 2025
 Language: en-UK
 Imports: terra
