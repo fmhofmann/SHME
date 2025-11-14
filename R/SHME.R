@@ -13,11 +13,11 @@
 #' The function then evaluates with [terra::linearUnits] if the linear unit of the coordinate reference system of the DEM is also metres.
 #' It subsequently checks with [terra::crs] if the coordinate reference systems of the input-DEM and the input-shapefile(s) are the same.
 #' For the next step, the function assesses whether the DEM covers the whole area/region relevant for snowpatch hollow metrics calculation.
-#' If "focus_points = TRUE", the function allows the user to interactively select the focus points for axes-related metrics calculation.
+#' If "focus_point = TRUE", the function allows the user to interactively select the focus points for axes-related metrics calculation.
 #' The abovementioned quality checks are then repeated for the focus point(s).
 #' If loading geodata was successful, the function prompts the following message: "Geodata successfully imported."
 #'
-#' @returns The function adds two or three objects to the global environment depending on whether "focus_point" is set to FALSE or not: "dem", "snowpatch_hollows", and optionally "focus_point_vect".
+#' @returns The function adds two or three objects to the global environment depending on whether "focus_point" is set to FALSE or not: "dem", "snowpatch_hollows", and optionally "focus_points".
 #' These are of class "SpatRast", "SpatRast", and "SpatVect", respectively.
 #' @examples
 #' SHME_load_geodata(focus_point = FALSE)
@@ -27,36 +27,36 @@ SHME_load_geodata = function(focus_point = FALSE){
   if("terra" %in% rownames(installed.packages()) == FALSE){
     message("Installing the terra package.")
     install.packages("terra")} # Check if the terra package is installed, otherwise install it.
-  suppressWarnings(library(terra))
+  suppressMessages(library(terra))
   message("Please select the DEM for metrics calculation")
   dem = terra::rast(file.choose())
   message("Please select shapefile of the hollows for snowpatch metrics calculation")
   snowpatch_hollows = terra::vect(file.choose())
   if(terra::linearUnits(dem) == 0){ # If the linear unit of the coordinate reference system of the DEM is not metres...
-    stop("WARNING: the linear unit of the coordinate reference system of the DEM is not metres.")
+    stop("Session interrupted: the linear unit of the coordinate reference system of the DEM is not metres.")
   }
   if(terra::linearUnits(snowpatch_hollows) == 0){ # If the linear unit of the coordinate reference system of the input-shapefile is not metres...
-    stop("WARNING: the linear unit of the coordinate reference system of the input-shapefile is not metres.")
+    stop("Session interrupted: the linear unit of the coordinate reference system of the input-shapefile is not metres.")
   }
   if(terra::crs(dem) != terra::crs(snowpatch_hollows)){
-    stop("WARNING: the coordinate reference systems of the input-DEM and the input-shapefile are not the same.")
+    stop("Session interrupted: the coordinate reference systems of the input-DEM and the input-shapefile are not the same.")
   }
   if(terra::xmin(snowpatch_hollows) < (terra::xmin(dem) + 2*terra::res(dem)[1]) | terra::xmax(snowpatch_hollows) > (terra::xmax(dem) - 2*terra::res(dem)[1]) | terra::ymin(snowpatch_hollows) < (terra::ymin(dem) + 2*terra::res(dem)[1]) | terra::ymax(snowpatch_hollows) > (terra::ymax(dem) - 2*terra::res(dem)[1])){
     stop("The DEM does not overlap with the whole area/region relevant for metrics extraction. Please use a DEM which is slightly larger than your area/region of interest.")
   }
   if(focus_point == TRUE){ # If user-defined focus points should also be uploaded
-    message("Please select shapefile of the user-defined focus points")
-    focus_point_vect = terra::vect(file.choose())
-    if(terra::linearUnits(focus_point_vect) == 0){ # If the linear unit of the coordinate reference system of the input-focus points is not metres...
-      stop("WARNING: the linear unit of the coordinate reference system of the input-focus points is not metres.")
+    message("Please select shapefile of the user-defined focus point(s).")
+    focus_points = terra::vect(file.choose())
+    if(terra::linearUnits(focus_points) == 0){ # If the linear unit of the coordinate reference system of the input-focus points is not metres...
+      stop("Session interrupted: the linear unit of the coordinate reference system of the input-focus points is not metres.")
     }
-    if(terra::crs(dem) != terra::crs(focus_point_vect) | terra::crs(snowpatch_hollows) != terra::crs(focus_point_vect)){
-      stop("WARNING: the coordinate reference systems of the input-focus points differs from the coordinate reference system of the input-DEM and the input-shapefile of the snowpatch hollows.")
+    if(terra::crs(dem) != terra::crs(focus_points) | terra::crs(snowpatch_hollows) != terra::crs(focus_points)){
+      stop("Session interrupted: the coordinate reference systems of the input-focus points differs from the coordinate reference system of the input-DEM and the input-shapefile of the snowpatch hollows.")
     }
     message("Geodata successfully imported.")
     list = list(snowpatch_hollows = snowpatch_hollows,
                 dem = dem,
-                focus_point_vect = focus_point_vect)
+                focus_points = focus_points)
     return(invisible(list2env(list, envir = globalenv()))) # Return the vectors to the global environment
   } else {
     message("Geodata successfully imported.")
@@ -65,7 +65,7 @@ SHME_load_geodata = function(focus_point = FALSE){
   }
 }
 
-#' Extract basin-related metrics of snowpatch hollows #
+#' Extract basin-related metrics of snowpatch hollows
 #'
 #' @param dem object of class "SpatRast" (see [terra::SpatRaster]) which is nothing else than the digital elevation model (DEM) of the area/region of interest.
 #' @param snowpatch_hollows object of class "SpatVect" (see [terra::SpatVector]) with the outline(s) of the snowpatch hollow(s)
@@ -166,7 +166,7 @@ SHME_basin_related_metrics = function(dem, snowpatch_hollows){
       elevation_max = vector()
       elevation_median = vector()
       elevation_range = vector()
-    } # Initialise vectors
+    }
     aspect_mean = c(aspect_mean,
                     mean(terra::as.data.frame(aspect)[,1]))
     aspect_median = c(aspect_median,
@@ -199,22 +199,22 @@ SHME_basin_related_metrics = function(dem, snowpatch_hollows){
 
   ID = 1:length(snowpatch_hollows)
 
-  snowpatch_hollow_metrics = data.frame(cbind(ID,
-                                              easting,
-                                              northing,
-                                              A2D,
-                                              elevation_min,
-                                              elevation_mean,
-                                              elevation_median,
-                                              elevation_max,
-                                              elevation_range,
-                                              aspect_mean,
-                                              aspect_median,
-                                              slope_min,
-                                              slope_mean,
-                                              slope_median,
-                                              slope_max))
-  write.table(snowpatch_hollow_metrics,
+  snowpatch_hollow_metrics_1 = data.frame(cbind(ID,
+                                               easting,
+                                               northing,
+                                               A2D,
+                                               elevation_min,
+                                               elevation_mean,
+                                               elevation_median,
+                                               elevation_max,
+                                               elevation_range,
+                                               aspect_mean,
+                                               aspect_median,
+                                               slope_min,
+                                               slope_mean,
+                                               slope_median,
+                                               slope_max))
+  write.table(snowpatch_hollow_metrics_1,
               file = "snowpatch_hollow_metrics_1.csv",
               sep = ";",
               row.names = FALSE,
@@ -231,19 +231,14 @@ SHME_basin_related_metrics = function(dem, snowpatch_hollows){
   message(paste("End time: ", end_time, sep = ""))
   message(paste("Processing time: ", round(processing_time, digits = 2), " mins.", sep =""))
 
-  # 7. Remove unnecessary objects #
+  # 7. Add the dataframe with snowpatch hollow metrics to the environment #
 
-  rm(list = setdiff(ls(), c("dem",
-                            "snowpatch_hollows",
-                            "snowpatch_hollow_metrics")))
-
-  # 8. Add the dataframe with snowpatch hollow metrics to the environment #
-
-  list = list(snowpatch_hollow_metrics_1 = snowpatch_hollow_metrics)
+  list = list(snowpatch_hollow_metrics_1 = snowpatch_hollow_metrics_1)
   return(invisible(list2env(list, envir = globalenv()))) # Return the vectors to the global environment
+  rm(list)
 }
 
-#' Extract axes-related metrics of snowpatch hollows #
+#' Extract axes-related metrics of snowpatch hollows
 #'
 #' @param dem object of class "SpatRast" (see [terra::SpatRaster]) which is nothing else than the digital elevation model (DEM) of the area/region of interest.
 #' @param snowpatch_hollows object of class "SpatVect" (see [terra::SpatVector]) with the outline(s) of the snowpatch hollow(s)
@@ -285,8 +280,8 @@ SHME_axes_related_metrics = function(dem,
         message("Installing the terra package.")
         install.packages("terra")} # Check if the terra package is installed, otherwise install it.
       suppressWarnings(library(terra))
-      snowpatch_hollows = terra::makeValid(snowpatch_hollows)
       message("Detect and fix topology problems (if applicable).")
+      snowpatch_hollows = terra::makeValid(snowpatch_hollows)
       if(terra::linearUnits(dem) == 0){ # If the linear unit of the coordinate reference system of the DEM is not metres...
         stop("Metrics calculation aborted: the linear unit of the coordinate reference system of the DEM is not metres.")
       }
@@ -303,7 +298,7 @@ SHME_axes_related_metrics = function(dem,
     sampled_points_xyz = terra::extract(dem,
                                         terra::spatSample(terra::as.lines(snowpatch_hollows[i]),
                                                           method = "regular",
-                                                          size = floor(terra::perim(terra::as.lines(snowpatch_hollows[i]))/5)), # Create regularly spaced points along the outline of the snowpatch hollows (spacing: xy-resolution of the DEM)
+                                                          size = floor(terra::perim(terra::as.lines(snowpatch_hollows[i]))/5)), # Create regularly spaced points along the outline of the snowpatch hollows (spacing: 5 m)
                                         method = "bilinear",
                                         xy = TRUE) # Get the elevation at the points from dem
     points_subset = subset(sampled_points_xyz,
@@ -430,14 +425,14 @@ SHME_axes_related_metrics = function(dem,
       # 7. Put the extracted metrics in a table #
 
       ID = 1:length(snowpatch_hollows)
-      snowpatch_hollow_metrics = data.frame(cbind(ID,
-                                                  terra::perim(axis_length),
-                                                  terra::perim(axis_width),
-                                                  axis_height,
-                                                  terra::perim(axis_length)/terra::perim(axis_width),
-                                                  (terra::perim(axis_length) + terra::perim(axis_length) + axis_height)^1/3)) # Determine the snowpatch hollow size
-      colnames(snowpatch_hollow_metrics) = c("ID","length","width","height","L_W","SHS")
-      write.table(snowpatch_hollow_metrics,
+      snowpatch_hollow_metrics_2 = data.frame(cbind(ID,
+                                                    terra::perim(axis_length),
+                                                    terra::perim(axis_width),
+                                                    axis_height,
+                                                    terra::perim(axis_length)/terra::perim(axis_width),
+                                                    (terra::perim(axis_length) + terra::perim(axis_length) + axis_height)^1/3)) # Determine the snowpatch hollow size
+      colnames(snowpatch_hollow_metrics_2) = c("ID","length","width","height","L_W","SHS")
+      write.table(snowpatch_hollow_metrics_2,
                   file = "snowpatch_hollow_metrics_2.csv",
                   row.names = FALSE,
                   sep = ";")
@@ -471,10 +466,189 @@ SHME_axes_related_metrics = function(dem,
       message(paste("End time: ", end_time, sep = ""))
       message(paste("Processing time: ", round(processing_time, digits = 2), " mins.", sep =""))
 
-      # 10. Remove all unnecessary variables from the environment
+      # 10. Add the results to the current environment
 
-      rm(list = setdiff(ls(), c("dem","snowpatch_hollows","snowpatch_hollow_metrics","step")))
-      list = list(snowpatch_hollow_metrics_2 = snowpatch_hollow_metrics)
+      list = list(snowpatch_hollow_metrics_2 = snowpatch_hollow_metrics_2)
+      return(invisible(list2env(list, envir = globalenv()))) # Return the selected objects to the global environment
+    }
+  }
+}
+
+#' Extract axes-related metrics of snowpatch hollows with user-defined focus points
+#'
+#' @param dem object of class "SpatRast" (see [terra::SpatRaster]) which is nothing else than the digital elevation model (DEM) of the area/region of interest.
+#' @param snowpatch_hollows object of class "SpatVect" (see [terra::SpatVector]) with the outline(s) of the snowpatch hollow(s)
+#' @param focus_points object of class "SpatVect" (see [terra::SpatVector]) with the user-defined focus point(s) of the snowpatch hollow(s)
+#' @param step Numeric. The distance between the interval nodes along the outline. Default to 5 m.
+#' @details
+#' This function allows for the calculation of the five axes-related metrics.
+#' These are length (snowpatch hollow length (m)), width (snowpatch hollow width (m)), height (snowpatch hollow height (m)), L_W (length/width ratio (unitless)), SHS (Snowpatch hollow size, defined as the cube root of the product of length, width, and height (m)))
+#' The function requires the snowpatch hollow focus, i.e., the snowpatch hollows thresholds’ midpoints, as input.
+#' Note that the snowpatch hollow threshold is the relative flat part of a snowpatch hollow with slight topographical variations, corresponding to the “entrance” to a snowpatch hollow.
+#'
+#' The main axis of the snowpatch hollow should meet the condition that it divides the hollow into two halves of equal size, starting from the focus point.
+#' The function therefore searches for the point on its backwall (target elevation: ≥ mean elevation at all points) which best satisfies this condition and creates an axis from the focus to this point.
+#' After the determination of the hollow’s length, the function determines the width axis which passes through the midpoint of the length axis.
+#' The function copies and rotates the length axis 90° around its midpoint, extends it, determines the intersection points with the polygon of the snow patch hollows, and calculates the distance between these two intersection points.
+#' The determination of the hollows’ length and width allows for calculating the size of snowpatch hollows (SHS), given in m (cube root of length plus width plus height).
+#' The height corresponds to the difference in elevation between the snowpatch hollow focus and the endpoint of the main axis on the hollow’s outline.
+#' Finally, the function exports the four axes-related metrics as a spreadsheet creates ESRI shapefiles of the focus points, threshold points, and the axes, respectively.
+#'
+#' @returns
+#' snowpatch_hollow_metrics_2
+#' A dataframe with the results of axes-related metrics extraction.
+#' @examples
+#' SHME_axes_related_metrics(dem = dem, snowpatch_hollows = snowpatch_hollows, focus_points = focus_points)
+#' @author Dr. Felix Martin Hofmann, University of Freiburg, Germany (\email{fmhofmann9892@@gmail.com})
+#' @export
+SHME_axes_related_metrics_2 = function(dem,
+                                       snowpatch_hollows,
+                                       focus_points,
+                                       step = 5){
+  for (i in 1:length(snowpatch_hollows)){
+    if(i == 1){
+      start_time = Sys.time()
+      message(paste("Start time: ", Sys.time(), sep = ""))
+
+      # 1. Check if the terra package is installed #
+
+      if("terra" %in% rownames(installed.packages()) == FALSE){
+        message("Installing the terra package.")
+        install.packages("terra")} # Check if the terra package is installed, otherwise install it.
+      suppressWarnings(library(terra))
+
+      # 2. Fix topology issues (if applicable) and perform quality checks #
+
+      message("Detect and fix topology problems (if applicable).")
+      snowpatch_hollows = terra::makeValid(snowpatch_hollows)
+      if(terra::linearUnits(dem) == 0 | terra::linearUnits(snowpatch_hollows) == 0 | terra::linearUnits(focus_points) == 0){ # If the linear unit of the coordinate reference system of the input is not metres...
+        stop("Metrics calculation aborted: the linear unit of the coordinate reference system of the input is not metres.")
+      }
+      if(terra::crs(dem) != terra::crs(snowpatch_hollows) | terra::crs(dem) != terra::crs(focus_points)){
+        stop("Metrics calculation aborted: the coordinate reference systems of the input-data are not the same.")
+      }
+    }
+
+    # 3. Derive the snowpatch hollow length #
+
+    sampled_points_xyz = terra::extract(dem,
+                                        terra::spatSample(terra::as.lines(snowpatch_hollows[i]),
+                                                          method = "regular",
+                                                          size = floor(terra::perim(terra::as.lines(snowpatch_hollows[i]))/5)), # Create regularly spaced points along the outline of the snowpatch hollows (spacing: 5 m)
+                                        method = "bilinear",
+                                        xy = TRUE) # Get the elevation at the points from dem
+
+    points_subset2 = sampled_points_xyz[which(sampled_points_xyz[,2] > mean(sampled_points_xyz[,2])),] # Exclude all points with an elevation lower than the mean elevation of all points
+    for (k in 1:length(points_subset2[,1])){
+      if(k == 1){polygon_area_diff = vector()}
+      possible_axis = terra::vect(cbind(c(points_subset2[k,3],terra::xmin(focus_points[i])),
+                                        c(points_subset2[k,4],terra::ymin(focus_points[i]))),
+                                  crs = terra::crs(snowpatch_hollows),
+                                  type = "lines")
+      possible_axis = terra::elongate(possible_axis,
+                                      length = 1000)
+      n_intersections = suppressWarnings(as.numeric(length(terra::as.points(terra::intersect(snowpatch_hollows[i],
+                                                                                             possible_axis))))) # Determine the number of intersections
+      if(n_intersections != 2){ # If the possible axis and the snowpatch hollow do not intersect at all or intersect more than two times...
+        polygon_area_diff = c(polygon_area_diff,Inf)
+        next}
+      polygon_area = terra::expanse(terra::split(snowpatch_hollows[i],
+                                                 possible_axis),
+                                    unit = "m")
+      polygon_area_diff = c(polygon_area_diff,
+                            abs(polygon_area[1] - polygon_area[2]))
+    }
+    points_subset3 = points_subset2[which(polygon_area_diff == min(polygon_area_diff)),]
+    if(i == 1){
+      axis_length = terra::vect(cbind(id = 1,
+                                      part = 1,
+                                      c(points_subset3[,3], terra::xmin(focus_points[i])),
+                                      c(points_subset3[,4], terra::ymin(focus_points[i]))),
+                                crs = terra::crs(snowpatch_hollows),
+                                type = "lines")
+    } else {
+      axis_length = rbind(axis_length,
+                          terra::vect(cbind(id = 1,
+                                            part = 1,
+                                            c(points_subset3[,3], terra::xmin(focus_points[i])),
+                                            c(points_subset3[,4], terra::ymin(focus_points[i]))),
+                                      crs = terra::crs(snowpatch_hollows),
+                                      type = "lines"))
+    }
+
+    # 4. Determine the snowpatch hollow width #
+
+    axis = terra::crop(terra::elongate(terra::spin(axis_length[i],
+                                                   angle = 90),
+                                       length = 10000),
+                       snowpatch_hollows[i])
+    if(length(axis) > 1){ # If axis contains multiple lines...
+      message("NOTE: multiple axes for the axis representing the width. Selecting the longest one.")
+      axis = terra::subset(axis,
+                           as.vector(terra::relate(axis, axis_length[i], relation = "crosses")) == TRUE)
+    }
+    if(i == 1){
+      axis_width = axis
+    } else {
+      axis_width = rbind(axis_width, axis)
+    }
+
+    # 5. Derive the snowpatch hollow height #
+
+    dem_cropped = terra::crop(dem,
+                              snowpatch_hollows[i],
+                              mask = TRUE)
+
+    if(i == 1){
+      axis_height = terra::minmax(dem_cropped)[2] - terra::minmax(dem_cropped)[1]
+    } else {
+      axis_height = c(axis_height,
+                      terra::minmax(dem_cropped)[2] - terra::minmax(dem_cropped)[1])
+    }
+    message(paste("Snowpatch hollow #",i," processed.",
+                  sep = ""))
+
+    if(i == length(snowpatch_hollows)){
+
+      # 6. Put the extracted metrics in a table #
+
+      ID = 1:length(snowpatch_hollows)
+      snowpatch_hollow_metrics_2 = data.frame(cbind(ID,
+                                                    terra::perim(axis_length),
+                                                    terra::perim(axis_width),
+                                                    axis_height,
+                                                    terra::perim(axis_length)/terra::perim(axis_width),
+                                                    (terra::perim(axis_length) + terra::perim(axis_length) + axis_height)^1/3)) # Determine the snowpatch hollow size
+      colnames(snowpatch_hollow_metrics_2) = c("ID","length","width","height","L_W","SHS")
+      write.table(snowpatch_hollow_metrics_2,
+                  file = "snowpatch_hollow_metrics_2.csv",
+                  row.names = FALSE,
+                  sep = ";")
+      message("Snowpatch hollow metrics successfully extracted.")
+
+      # 7. Export geodata to the current working directory #
+
+      terra::writeVector(axis_length,
+                         filename = "snowpatch_hollow_length.shp",
+                         filetype = "ESRI Shapefile",
+                         overwrite = TRUE)
+      terra::writeVector(axis_width,
+                         filename = "snowpatch_hollow_width.shp",
+                         filetype = "ESRI Shapefile",
+                         overwrite = TRUE)
+
+      # 8. Calculate the processing time and remove unnecessary elements in the environment #
+
+      end_time = Sys.time()
+      processing_time = as.vector(difftime(end_time,
+                                           start_time,
+                                           units = "mins"))
+      message(paste("End time: ", end_time, sep = ""))
+      message(paste("Processing time: ", round(processing_time, digits = 2), " mins.", sep =""))
+
+      # 10. Add the results to the current environment
+
+      list = list(snowpatch_hollow_metrics_2 = snowpatch_hollow_metrics_2)
       return(invisible(list2env(list, envir = globalenv()))) # Return the selected objects to the global environment
     }
   }

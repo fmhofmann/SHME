@@ -10,7 +10,7 @@ SHME_load_geodata(focus_point = FALSE)
 \item{focus_point}{Logical. Should the function upload user-defined focus points? Default to FALSE.}
 }
 \value{
-The function adds two or three objects to the global environment depending on whether "focus_point" is set to FALSE or not: "dem", "snowpatch_hollows", and optionally "focus_point_vect".
+The function adds two or three objects to the global environment depending on whether "focus_point" is set to FALSE or not: "dem", "snowpatch_hollows", and optionally "focus_points".
 These are of class "SpatRast", "SpatRast", and "SpatVect", respectively.
 }
 \description{
@@ -25,7 +25,7 @@ The function first assesses with \link[terra:linearUnits]{terra::linearUnits} wh
 The function then evaluates with \link[terra:linearUnits]{terra::linearUnits} if the linear unit of the coordinate reference system of the DEM is also metres.
 It subsequently checks with \link[terra:crs]{terra::crs} if the coordinate reference systems of the input-DEM and the input-shapefile(s) are the same.
 For the next step, the function assesses whether the DEM covers the whole area/region relevant for snowpatch hollow metrics calculation.
-If "focus_points = TRUE", the function allows the user to interactively select the focus points for axes-related metrics calculation.
+If "focus_point = TRUE", the function allows the user to interactively select the focus points for axes-related metrics calculation.
 The abovementioned quality checks are then repeated for the focus point(s).
 If loading geodata was successful, the function prompts the following message: "Geodata successfully imported."
 }

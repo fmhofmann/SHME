@@ -2,7 +2,7 @@
 % Please edit documentation in R/SHME.R
 \name{SHME_basin_related_metrics}
 \alias{SHME_basin_related_metrics}
-\title{Extract basin-related metrics of snowpatch hollows #}
+\title{Extract basin-related metrics of snowpatch hollows}
 \usage{
 SHME_basin_related_metrics(dem, snowpatch_hollows)
 }
@@ -16,7 +16,7 @@ snowpatch_hollow_metrics_1
 A dataframe with the exported, basin-related snowpatch hollow metrics
 }
 \description{
-Extract basin-related metrics of snowpatch hollows #
+Extract basin-related metrics of snowpatch hollows
 }
 \details{
 This function allows for extracting 14 basin-related metrics of snowpatch hollows:
