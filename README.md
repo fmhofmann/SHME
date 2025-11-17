@@ -8,7 +8,6 @@ Note that there will be soon a paper on the performance of the toolbox presented
 
 List of the retrieved metrics:
 
-|---------------|-----------------|------------------|-----------------------------------------------------------|
 | Group         | Sub-group       | Metrics          | Description                                               |
 |---------------|-----------------|------------------|-----------------------------------------------------------|
 | Basin-related | Coordinates     | easting          | Easting of the snowpatch hollow’s midpoint (m)            |
@@ -48,7 +47,6 @@ List of the retrieved metrics:
 |               |                 | L_W              | Length/width ratio (unitless)                             |
 |               |-----------------|------------------|-----------------------------------------------------------|
 |               | Size            | SHS              | Snowpatch hollow size (m)                                 |
-|---------------|-----------------|------------------|-----------------------------------------------------------|
 
 ## Installation
 
