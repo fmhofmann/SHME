@@ -8,7 +8,7 @@ Note that there will be soon a paper on the performance of the toolbox presented
 
 List of the retrieved metrics:
 
-| Group         | Sub-group       | Metrics          | Description                                               |
+| **Group**     | **Sub-group**   | **Metrics**      | **Description**                                           |
 |---------------|-----------------|------------------|-----------------------------------------------------------|
 | Basin-related | Coordinates     | easting          | Easting of the snowpatch hollow’s midpoint (m)            |
 |               |                 | northing         | Northing of the snowpatch hollow’s midpoint (m)           |
