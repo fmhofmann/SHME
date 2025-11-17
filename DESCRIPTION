@@ -4,8 +4,7 @@ Version: 1.1
 Date: 13 November 2025
 Language: en-UK
 Imports: terra
-URL: https://github.com/fmhofmann/SHME
-DOI: https://doi.org/10.5281/zenodo.17601651
+URL: https://doi.org/10.5281/zenodo.17601651
 Authors@R: 
     person("Felix Martin", "Hofmann", role = c("aut", "cre"), email = "fmhofmann9892@gmail.com", comment = c(ORCID = "0000-0002-9882-2613"))
 Description: This package allows the user to obtain metrics of snowpatch hollows with the aid of a digital elevation model.
