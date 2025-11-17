@@ -12,39 +12,22 @@ List of the retrieved metrics:
 |---------------|-----------------|------------------|-----------------------------------------------------------|
 | Basin-related | Coordinates     | easting          | Easting of the snowpatch hollow’s midpoint (m)            |
 |               |                 | northing         | Northing of the snowpatch hollow’s midpoint (m)           |
-|               |-----------------|------------------|-----------------------------------------------------------|
 |               | 2D surface      | A2D              | The hollow’s map area (m²)                                |
-|               |-----------------|------------------|-----------------------------------------------------------|
 |               | Elevation       | elevation_min    | Minimum elevation in the snowpatch hollow area (m a.s.l.) |
-|               |                 |------------------|-----------------------------------------------------------|
 |               |                 | elevation_max    | Maximum elevation in the snowpatch hollow area (m a.s.l.) |
-|               |                 |------------------|-----------------------------------------------------------|
 |               |                 | elevation_mean   | Mean elevation in the snowpatch hollow area (m a.s.l.)    |
-|               |                 |------------------|-----------------------------------------------------------|
 |               |                 | elevation_median | Median elevation in the snowpatch hollow area (m a.s.l.)  |
-|               |                 |------------------|-----------------------------------------------------------|
 |               |                 | elevation_range  | Elevation range in the snowpatch hollow area (m)          |
-|               |-----------------|------------------|-----------------------------------------------------------|
 |               | Aspect          | aspect_mean      | Mean aspect in the snowpatch hollow area (° from North)   |
-|               |                 |------------------|-----------------------------------------------------------|
 |               |                 | aspect_median    | Median aspect in the snowpatch hollow area (° from North) |
-|               |                 |------------------|-----------------------------------------------------------|
 |               |                 | slope_min        | Minimum surface slope in the snowpatch hollow area (°)    |
-|               |                 |------------------|-----------------------------------------------------------|
 |               |                 | slope_mean       | Mean surface slope in the snowpatch hollow area (°)       |
-|               |                 |------------------|-----------------------------------------------------------|
 |               |                 | slope_median     | Median surface slope in the snowpatch hollow area (°)     |
-|               |                 |------------------|-----------------------------------------------------------|
 |               |                 | slope_max        | Maximum surface slope in the snowpatch hollow area (°)    |
-|---------------|-----------------|------------------|-----------------------------------------------------------|
 | Axes-related  | Axes            | length           | Snowpatch hollow length (m)                               |
-|               |                 |------------------|-----------------------------------------------------------|
 |               |                 | width            | Snowpatch hollow width (m)                                |
-|               |                 |------------------|-----------------------------------------------------------|
 |               |                 | height           | Snowpatch hollow height (m)                               |
-|               |                 |------------------|-----------------------------------------------------------|
 |               |                 | L_W              | Length/width ratio (unitless)                             |
-|               |-----------------|------------------|-----------------------------------------------------------|
 |               | Size            | SHS              | Snowpatch hollow size (m)                                 |
 
 ## Installation
