@@ -11,7 +11,6 @@ List of the retrieved metrics:
 | Group         | Sub-group       | Metrics          | Description                                               |
 |---------------|-----------------|------------------|-----------------------------------------------------------|
 | Basin-related | Coordinates     | easting          | Easting of the snowpatch hollow’s midpoint (m)            |
-|               |                 |                  |                                                           |
 |               |                 | northing         | Northing of the snowpatch hollow’s midpoint (m)           |
 |               |-----------------|------------------|-----------------------------------------------------------|
 |               | 2D surface      | A2D              | The hollow’s map area (m²)                                |
