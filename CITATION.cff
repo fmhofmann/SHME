@@ -1,0 +1,10 @@
+authors: 
+  - family-names: Hofmann
+    given-names: Felix Martin
+    orcid: https://orcid.org/0000-0002-9882-2613
+title: "Snowpatch Hollow Metrics Extraction in a geographic information system (GIS) environment"
+version: 1.1
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.17601651
+date-released: 2021-11-17
