@@ -6,7 +6,7 @@
 
 What you just need to run the two function is a digital elevation model (DEM) of the site or region of interest and a shapefile with the outlines of the snowpatch hollows.
 
-## List of the retrieved metrics
+## List of the retrieved snowpatch hollow metrics
 
 | Group         | Sub-group       | Metrics          | Description                                               |
 |---------------|-----------------|------------------|-----------------------------------------------------------|
