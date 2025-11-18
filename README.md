@@ -4,7 +4,7 @@
 
 ## Requirements
 
-What you just need to run the two function is a digital elevation model (DEM) of the site or region of interest and a shapefile with the outlines of the snowpatch hollows. Note that these files must have the same coordinate reference systems (CRS) and the unit of the CRS must be metres.
+What you just need to run the two function is a digital elevation model (DEM) of the site or region of interest (.tif) and a shapefile with the outlines of the snowpatch hollows (.shp). Note that these files must have the same coordinate reference system (CRS) and the unit of the CRS must be metres. If this is not the case, SHME will prompt an error message and stop running.
 
 ## List of the retrieved snowpatch hollow metrics
 
