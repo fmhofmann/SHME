@@ -51,6 +51,11 @@ library(devtools)
 ```
 install_github("fmhofmann/SHME")
 ```
+## Suggested Citation
+
+If you use the package for a publication, please cite `SHME` as follows:
+
+Hofmann, F. M.: SHME: Automatic Snowpatch Hollow Metrics Extraction in a geographic information system (GIS) environment, GitHub [code], [https://doi.org/10.5281/zenodo.17601651](https://doi.org/10.5281/zenodo.17601651).
 
 ## Contact
 
