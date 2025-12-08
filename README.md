@@ -1,4 +1,4 @@
-# Snowpatch hollow metrics extraction (SHME) <img align="right" src="man/SHME.svg" width="170">
+# Snowpatch hollow metrics extraction (SHME) <img align="right" src="man/SHME.svg" width="250">
 
 ## Description 
 
