@@ -2,14 +2,14 @@
 # CITATION file created with {cffr} R package
 # See also: https://docs.ropensci.org/cffr/
 # --------------------------------------------
- 
+
 cff-version: 1.2.0
 message: 'To cite package "SHME" in publications use:'
 type: software
 license: CC-BY-NC-4.0
 title: 'SHME: Automatic Snowpatch Hollow Metrics Extraction in a geographic information
   system (GIS) environment'
-version: '1.1'
+version: '1.2'
 doi: 10.5281/zenodo.17601651
 abstract: This package allows the user to obtain metrics of snowpatch hollows with
   the aid of a digital elevation model.
