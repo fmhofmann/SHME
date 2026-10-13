@@ -293,116 +293,136 @@ SHME_axes_related_metrics = function(dem,
       }
     }
 
-    # 1. Create a subset of points for focus points calculation #
+    points_outline = terra::extract(dem,
+                                    terra::spatSample(terra::as.lines(snowpatch_hollows[i]),
+                                                      method = "regular",
+                                                      size = floor(terra::perim(terra::as.lines(snowpatch_hollows[i]))/step)), # Create regularly spaced points along the outline of the snowpatch hollows (spacing according to step, default to 5 m)
+                                    method = "bilinear",
+                                    bind = TRUE) # Get the elevation at evenly spaced at the outline of the follows from the DEM
+    names(points_outline) = "DEM" # Rename the column with the elevation values
 
-    sampled_points_xyz = terra::extract(dem,
-                                        terra::spatSample(terra::as.lines(snowpatch_hollows[i]),
-                                                          method = "regular",
-                                                          size = floor(terra::perim(terra::as.lines(snowpatch_hollows[i]))/5)), # Create regularly spaced points along the outline of the snowpatch hollows (spacing: 5 m)
-                                        method = "bilinear",
-                                        xy = TRUE) # Get the elevation at the points from dem
-    points_subset = subset(sampled_points_xyz,
-                           sampled_points_xyz[,2] < mean(sampled_points_xyz[,2])) # Exclude all points with an elevation higher than the mean elevation of all points
-    breaks = seq(from = min(points_subset[,2]),
-                 to = max(points_subset[,2]) + step*2,
+    points_outline_subset = points_outline[points_outline$DEM < mean(points_outline$DEM), ] # Exclude all points with an elevation higher than the mean elevation of all points
+
+    breaks = seq(from = min(points_outline_subset$DEM),
+                 to = max(points_outline_subset$DEM) + step*2,
                  by = step) # Create the breaks for the histogram of elevation
 
     # 2. Determine threshold points #
 
     if(length(breaks) < 3){
-      threshold_points = points_subset
+      threshold_points = points_outline_subset
     } else {
-      hist = hist(points_subset[,2], # Create a histogram of elevations in the bins
+      hist = hist(points_outline_subset$DEM, # Create a histogram of elevations in the bins
                   breaks = breaks,
                   plot = FALSE)
-      threshold_points = points_subset[(points_subset[,2] >= breaks[which(max(hist$counts[1]) == max(hist$counts[1]))]) & (points_subset[,2] <= breaks[which(max(hist$counts[1]) == max(hist$counts[1])) + 1]),]
+      threshold_points = points_outline_subset[(points_outline_subset$DEM >= breaks[which(max(hist$counts[1]) == max(hist$counts[1]))]) & (points_outline_subset$DEM <= breaks[which(max(hist$counts[1]) == max(hist$counts[1])) + 1]), ]
     }
+
     if (i == 1){ # During the first iteration
-      threshold_vect = terra::vect(cbind(points_subset[,3], # Create a new object of class SpatVect with the snowpatch hollow thresholds
-                                         points_subset[,4]),
-                                   crs = terra::crs(snowpatch_hollows))
+      threshold_vect = threshold_points
     } else { # During all subsequent iterations
-      threshold_vect = rbind(threshold_vect,
-                             terra::vect(cbind(threshold_points[,3],
-                                               threshold_points[,4]),
-                                         crs = terra::crs(snowpatch_hollows)))
+      threshold_vect = rbind(threshold_vect, threshold_points)
     }
 
     # 3. Determine the snowpatch hollow focus #
 
-    distance = as.vector(terra::distance(as.matrix(cbind(threshold_points[,3],
-                                                         threshold_points[,4])),
-                                         as.matrix(cbind(mean(threshold_points[,3]),
-                                                         mean(threshold_points[,4]))),
-                                         lonlat = FALSE,
-                                         unit = "m"))
-    # Determine the distance of all threshold points to the threshold points' midpoint
+    # 3.1 Determine the distance of all threshold points to the threshold points' midpoint #
+
+    threshold_points_dist = terra::distance(threshold_points,
+                                            terra::vect(cbind(mean(c(terra::xmax(threshold_points), terra::xmin(threshold_points))),
+                                                              mean(c(terra::ymax(threshold_points), terra::ymin(threshold_points)))),
+                                                        crs = terra::crs(threshold_points)),
+                                            unit = "m")
+
+    # 3.2 Select the threshold point which is closest to the centre of threshold_points #
+
     if(i == 1){ # During the first iteration
-      focus_point_vect = terra::vect(cbind(threshold_points[,3][which(distance == min(distance))],
-                                           threshold_points[,4][which(distance == min(distance))]),
-                                     crs = terra::crs(snowpatch_hollows))
+      focus_point = threshold_points[which(threshold_points_dist == min(threshold_points_dist))]
     } else { # During all subsequent iterations
-      focus_point_vect = rbind(focus_point_vect,
-                               terra::vect(cbind(threshold_points[,3][which(distance == min(distance))],
-                                                 threshold_points[,4][which(distance == min(distance))]),
-                                           crs = terra::crs(snowpatch_hollows)))
+      focus_point = rbind(focus_point,
+                          threshold_points[which(threshold_points_dist == min(threshold_points_dist))])
     }
 
-    # 4. Derive the snowpatch hollow length #
+    # 3.3 Select possible endpoints of the line from the focus point #
 
-    points_subset2 = sampled_points_xyz[which(sampled_points_xyz[,2] > mean(sampled_points_xyz[,2])),] # Exclude all points with an elevation lower than the mean elevation of all points
-    for (k in 1:length(points_subset2[,1])){
+    points_outline_subset_2 = points_outline[points_outline$DEM > mean(points_outline$DEM), ] # Exclude all points with an elevation lower than the mean elevation of all points
+
+    for (k in 1:length(points_outline_subset_2$DEM)){
       if(k == 1){polygon_area_diff = vector()}
-      possible_axis = terra::vect(cbind(c(points_subset2[k,3],terra::xmin(focus_point_vect[i])),
-                                        c(points_subset2[k,4],terra::ymin(focus_point_vect[i]))),
+      possible_axis = terra::vect(cbind(c(terra::crds(points_outline_subset_2[k])[1],terra::crds(focus_point[i])[1]),
+                                        c(terra::crds(points_outline_subset_2[k])[2],terra::crds(focus_point[i])[2])),
                                   crs = terra::crs(snowpatch_hollows),
-                                  type = "lines")
+                                  type = "lines") # Link the focus point to the possible endpoint
       possible_axis = terra::elongate(possible_axis,
-                                      length = 1000)
+                                      length = 1000) # Elongate the possible axis
       n_intersections = suppressWarnings(as.numeric(length(terra::as.points(terra::intersect(snowpatch_hollows[i],
                                                                                              possible_axis))))) # Determine the number of intersections
       if(n_intersections != 2){ # If the possible axis and the snowpatch hollow do not intersect at all or intersect more than two times...
-        polygon_area_diff = c(polygon_area_diff,Inf)
-        next}
+        if(k == 1){
+          polygon_area_diff = Inf
+          next
+        } else {
+          polygon_area_diff = c(polygon_area_diff,Inf)
+          next}}
+
       polygon_area = terra::expanse(terra::split(snowpatch_hollows[i],
                                                  possible_axis),
-                                    unit = "m")
-      polygon_area_diff = c(polygon_area_diff,
-                            abs(polygon_area[1] - polygon_area[2]))
-    }
-    points_subset3 = points_subset2[which(polygon_area_diff == min(polygon_area_diff)),]
-    if(i == 1){
-      axis_length = terra::vect(cbind(id = 1,
-                                      part = 1,
-                                      c(points_subset3[,3], terra::xmin(focus_point_vect[i])),
-                                      c(points_subset3[,4], terra::ymin(focus_point_vect[i]))),
-                                crs = terra::crs(snowpatch_hollows),
-                                type = "lines")
-    } else {
-      axis_length = rbind(axis_length,
-                          terra::vect(cbind(id = 1,
-                                            part = 1,
-                                            c(points_subset3[,3], terra::xmin(focus_point_vect[i])),
-                                            c(points_subset3[,4], terra::ymin(focus_point_vect[i]))),
-                                      crs = terra::crs(snowpatch_hollows),
-                                      type = "lines"))
+                                    unit = "m") # Determine the area of the two parts of the snowpatch hollow
+
+      if(k == 1){
+        polygon_area_diff = abs(polygon_area[1] - polygon_area[2])
+      } else {
+        polygon_area_diff = c(polygon_area_diff,
+                              abs(polygon_area[1] - polygon_area[2]))
+      }
     }
 
-    # 5. Determine the snowpatch hollow width #
+    length_a = terra::crds(points_outline_subset_2[which(polygon_area_diff == min(polygon_area_diff)),]) # Look for the possible axis which divides the hollow in two parts of approximately equal size
+
+    length_b = terra::crds(focus_point[i]) # Extract the xy-coordinates of the endpoint
+
+    if(i == 1){
+      axis_length = vect(rbind(length_a,
+                               length_b),
+                         type = "lines",
+                         crs = crs(snowpatch_hollows[i])) # Link the focus point and the "best" endpoint
+    } else {
+      axis_length = rbind(axis_length,
+                          vect(rbind(length_a,
+                                     length_b),
+                               type = "lines",
+                               crs = crs(snowpatch_hollows[i]))) # Link the focus point and the "best" endpoint
+    }
+
+    # 3.4 Determine the azimuth of axis with respect to North
+
+    angle_rad = atan2(length_b[,1] - length_a[,1],
+                      length_b[,2] - length_a[,2])
+
+    angle_deg = (angle_rad * 180 / pi) %% 360
+
+    if(i == 1){
+      axis_azimuth = angle_deg
+    } else {
+      axis_azimuth = c(axis_azimuth, angle_deg)
+    }
+
+    # 4. Determine the snowpatch hollow width #
 
     axis = terra::crop(terra::elongate(terra::spin(axis_length[i],
                                                    angle = 90),
                                        length = 10000),
                        snowpatch_hollows[i])
+
     if(length(axis) > 1){ # If axis contains multiple lines...
       message("NOTE: multiple axes for the axis representing the width. Selecting the longest one.")
       axis = terra::subset(axis,
-                           as.vector(terra::relate(axis, axis_length[i], relation = "crosses")) == TRUE)
-    }
+                           as.vector(terra::relate(axis, axis_length[i], relation = "crosses")) == TRUE)}
     if(i == 1){
       axis_width = axis
     } else {
-      axis_width = rbind(axis_width, axis)
+      axis_width = rbind(axis_width,
+                         axis)
     }
 
     # 6. Derive the snowpatch hollow height #
@@ -420,38 +440,46 @@ SHME_axes_related_metrics = function(dem,
     message(paste("Snowpatch hollow #",i," processed.",
                   sep = ""))
 
+    # 7. At the end: put the extracted metrics in a table #
+
     if(i == length(snowpatch_hollows)){
 
-      # 7. Put the extracted metrics in a table #
-
       ID = 1:length(snowpatch_hollows)
+
       snowpatch_hollow_metrics_2 = data.frame(cbind(ID,
                                                     terra::perim(axis_length),
                                                     terra::perim(axis_width),
                                                     axis_height,
                                                     terra::perim(axis_length)/terra::perim(axis_width),
+                                                    axis_azimuth,
                                                     (terra::perim(axis_length) + terra::perim(axis_length) + axis_height)^1/3)) # Determine the snowpatch hollow size
-      colnames(snowpatch_hollow_metrics_2) = c("ID","length","width","height","L_W","SHS")
+
+      colnames(snowpatch_hollow_metrics_2) = c("ID","length","width","height","L_W","axis_azimuth","SHS")
+
       write.table(snowpatch_hollow_metrics_2,
                   file = "snowpatch_hollow_metrics_2.csv",
                   row.names = FALSE,
                   sep = ";")
+
       message("Snowpatch hollow metrics successfully extracted.")
 
       # 8. Export geodata to the current working directory #
 
-      terra::writeVector(focus_point_vect,
+      terra::writeVector(focus_point,
                          filename = "focus_points.shp",
                          filetype = "ESRI Shapefile",
                          overwrite = TRUE)
+
       terra::writeVector(threshold_vect,
                          filename = "threshold_points.shp",
                          filetype = "ESRI Shapefile",
                          overwrite = TRUE)
+
       terra::writeVector(axis_length,
                          filename = "snowpatch_hollow_length.shp",
                          filetype = "ESRI Shapefile",
                          overwrite = TRUE)
+
       terra::writeVector(axis_width,
                          filename = "snowpatch_hollow_width.shp",
                          filetype = "ESRI Shapefile",
@@ -460,10 +488,13 @@ SHME_axes_related_metrics = function(dem,
       # 9. Calculate the processing time #
 
       end_time = Sys.time()
+
       processing_time = as.vector(difftime(end_time,
                                            start_time,
                                            units = "mins"))
+
       message(paste("End time: ", end_time, sep = ""))
+
       message(paste("Processing time: ", round(processing_time, digits = 2), " mins.", sep =""))
 
       # 10. Add the results to the current environment
@@ -509,71 +540,93 @@ SHME_axes_related_metrics_2 = function(dem,
     if(i == 1){
       start_time = Sys.time()
       message(paste("Start time: ", Sys.time(), sep = ""))
-
-      # 1. Check if the terra package is installed #
-
       if("terra" %in% rownames(installed.packages()) == FALSE){
         message("Installing the terra package.")
         install.packages("terra")} # Check if the terra package is installed, otherwise install it.
       suppressWarnings(library(terra))
-
-      # 2. Fix topology issues (if applicable) and perform quality checks #
-
       message("Detect and fix topology problems (if applicable).")
       snowpatch_hollows = terra::makeValid(snowpatch_hollows)
-      if(terra::linearUnits(dem) == 0 | terra::linearUnits(snowpatch_hollows) == 0 | terra::linearUnits(focus_points) == 0){ # If the linear unit of the coordinate reference system of the input is not metres...
-        stop("Metrics calculation aborted: the linear unit of the coordinate reference system of the input is not metres.")
+      if(terra::linearUnits(dem) == 0){ # If the linear unit of the coordinate reference system of the DEM is not metres...
+        stop("Metrics calculation aborted: the linear unit of the coordinate reference system of the DEM is not metres.")
       }
-      if(terra::crs(dem) != terra::crs(snowpatch_hollows) | terra::crs(dem) != terra::crs(focus_points)){
-        stop("Metrics calculation aborted: the coordinate reference systems of the input-data are not the same.")
+      if(terra::linearUnits(snowpatch_hollows) == 0){ # If the linear unit of the coordinate reference system of the input-shapefile is not metres...
+        stop("Metrics calculation aborted: the linear unit of the coordinate reference system of the input-shapefile is not metres.")
+      }
+      if(terra::crs(dem) != terra::crs(snowpatch_hollows)){
+        stop("Metrics calculation aborted: the coordinate reference systems of the input-DEM and the input-shapefile are not the same.")
       }
     }
 
-    # 3. Derive the snowpatch hollow length #
+    points_outline = terra::extract(dem,
+                                    terra::spatSample(terra::as.lines(snowpatch_hollows[i]),
+                                                      method = "regular",
+                                                      size = floor(terra::perim(terra::as.lines(snowpatch_hollows[i]))/step)), # Create regularly spaced points along the outline of the snowpatch hollows (spacing according to step, default to 5 m)
+                                    method = "bilinear",
+                                    bind = TRUE) # Get the elevation at evenly spaced at the outline of the follows from the DEM
+    names(points_outline) = "DEM" # Rename the column with the elevation values
 
-    sampled_points_xyz = terra::extract(dem,
-                                        terra::spatSample(terra::as.lines(snowpatch_hollows[i]),
-                                                          method = "regular",
-                                                          size = floor(terra::perim(terra::as.lines(snowpatch_hollows[i]))/5)), # Create regularly spaced points along the outline of the snowpatch hollows (spacing: 5 m)
-                                        method = "bilinear",
-                                        xy = TRUE) # Get the elevation at the points from dem
+    # 4 Select possible endpoints of the line from the focus point #
 
-    points_subset2 = sampled_points_xyz[which(sampled_points_xyz[,2] > mean(sampled_points_xyz[,2])),] # Exclude all points with an elevation lower than the mean elevation of all points
-    for (k in 1:length(points_subset2[,1])){
+    points_outline_subset_2 = points_outline[points_outline$DEM > mean(points_outline$DEM), ] # Exclude all points with an elevation lower than the mean elevation of all points
+
+    for (k in 1:length(points_outline_subset_2$DEM)){
       if(k == 1){polygon_area_diff = vector()}
-      possible_axis = terra::vect(cbind(c(points_subset2[k,3],terra::xmin(focus_points[i])),
-                                        c(points_subset2[k,4],terra::ymin(focus_points[i]))),
+      possible_axis = terra::vect(cbind(c(terra::crds(points_outline_subset_2[k])[1],terra::crds(focus_points[i])[1]),
+                                        c(terra::crds(points_outline_subset_2[k])[2],terra::crds(focus_points[i])[2])),
                                   crs = terra::crs(snowpatch_hollows),
-                                  type = "lines")
+                                  type = "lines") # Link the focus point to the possible endpoint
       possible_axis = terra::elongate(possible_axis,
-                                      length = 1000)
+                                      length = 1000) # Elongate the possible axis
       n_intersections = suppressWarnings(as.numeric(length(terra::as.points(terra::intersect(snowpatch_hollows[i],
                                                                                              possible_axis))))) # Determine the number of intersections
       if(n_intersections != 2){ # If the possible axis and the snowpatch hollow do not intersect at all or intersect more than two times...
-        polygon_area_diff = c(polygon_area_diff,Inf)
-        next}
+        if(k == 1){
+          polygon_area_diff = Inf
+          next
+        } else {
+          polygon_area_diff = c(polygon_area_diff,Inf)
+          next}}
+
       polygon_area = terra::expanse(terra::split(snowpatch_hollows[i],
                                                  possible_axis),
-                                    unit = "m")
-      polygon_area_diff = c(polygon_area_diff,
-                            abs(polygon_area[1] - polygon_area[2]))
+                                    unit = "m") # Determine the area of the two parts of the snowpatch hollow
+
+      if(k == 1){
+        polygon_area_diff = abs(polygon_area[1] - polygon_area[2])
+      } else {
+        polygon_area_diff = c(polygon_area_diff,
+                              abs(polygon_area[1] - polygon_area[2]))
+      }
     }
-    points_subset3 = points_subset2[which(polygon_area_diff == min(polygon_area_diff)),]
+
+    length_a = terra::crds(points_outline_subset_2[which(polygon_area_diff == min(polygon_area_diff)),]) # Look for the possible axis which divides the hollow in two parts of approximately equal size
+
+    length_b = terra::crds(focus_points[i]) # Extract the xy-coordinates of the endpoint
+
     if(i == 1){
-      axis_length = terra::vect(cbind(id = 1,
-                                      part = 1,
-                                      c(points_subset3[,3], terra::xmin(focus_points[i])),
-                                      c(points_subset3[,4], terra::ymin(focus_points[i]))),
-                                crs = terra::crs(snowpatch_hollows),
-                                type = "lines")
+      axis_length = vect(rbind(length_a,
+                               length_b),
+                         type = "lines",
+                         crs = crs(snowpatch_hollows[i])) # Link the focus point and the "best" endpoint
     } else {
       axis_length = rbind(axis_length,
-                          terra::vect(cbind(id = 1,
-                                            part = 1,
-                                            c(points_subset3[,3], terra::xmin(focus_points[i])),
-                                            c(points_subset3[,4], terra::ymin(focus_points[i]))),
-                                      crs = terra::crs(snowpatch_hollows),
-                                      type = "lines"))
+                          vect(rbind(length_a,
+                                     length_b),
+                               type = "lines",
+                               crs = crs(snowpatch_hollows[i]))) # Link the focus point and the "best" endpoint
+    }
+
+    # 3.4 Determine the azimuth of axis with respect to North
+
+    angle_rad = atan2(length_b[,1] - length_a[,1],
+                      length_b[,2] - length_a[,2])
+
+    angle_deg = (angle_rad * 180 / pi) %% 360
+
+    if(i == 1){
+      axis_azimuth = angle_deg
+    } else {
+      axis_azimuth = c(axis_azimuth, angle_deg)
     }
 
     # 4. Determine the snowpatch hollow width #
@@ -582,18 +635,19 @@ SHME_axes_related_metrics_2 = function(dem,
                                                    angle = 90),
                                        length = 10000),
                        snowpatch_hollows[i])
+
     if(length(axis) > 1){ # If axis contains multiple lines...
       message("NOTE: multiple axes for the axis representing the width. Selecting the longest one.")
       axis = terra::subset(axis,
-                           as.vector(terra::relate(axis, axis_length[i], relation = "crosses")) == TRUE)
-    }
+                           as.vector(terra::relate(axis, axis_length[i], relation = "crosses")) == TRUE)}
     if(i == 1){
       axis_width = axis
     } else {
-      axis_width = rbind(axis_width, axis)
+      axis_width = rbind(axis_width,
+                         axis)
     }
 
-    # 5. Derive the snowpatch hollow height #
+    # 6. Derive the snowpatch hollow height #
 
     dem_cropped = terra::crop(dem,
                               snowpatch_hollows[i],
@@ -608,42 +662,51 @@ SHME_axes_related_metrics_2 = function(dem,
     message(paste("Snowpatch hollow #",i," processed.",
                   sep = ""))
 
+    # 7. At the end: put the extracted metrics in a table #
+
     if(i == length(snowpatch_hollows)){
 
-      # 6. Put the extracted metrics in a table #
-
       ID = 1:length(snowpatch_hollows)
+
       snowpatch_hollow_metrics_2 = data.frame(cbind(ID,
                                                     terra::perim(axis_length),
                                                     terra::perim(axis_width),
                                                     axis_height,
                                                     terra::perim(axis_length)/terra::perim(axis_width),
+                                                    axis_azimuth,
                                                     (terra::perim(axis_length) + terra::perim(axis_length) + axis_height)^1/3)) # Determine the snowpatch hollow size
-      colnames(snowpatch_hollow_metrics_2) = c("ID","length","width","height","L_W","SHS")
+
+      colnames(snowpatch_hollow_metrics_2) = c("ID","length","width","height","L_W","axis_azimuth","SHS")
+
       write.table(snowpatch_hollow_metrics_2,
                   file = "snowpatch_hollow_metrics_2.csv",
                   row.names = FALSE,
                   sep = ";")
+
       message("Snowpatch hollow metrics successfully extracted.")
 
-      # 7. Export geodata to the current working directory #
+      # 8. Export geodata to the current working directory #
 
       terra::writeVector(axis_length,
                          filename = "snowpatch_hollow_length.shp",
                          filetype = "ESRI Shapefile",
                          overwrite = TRUE)
+
       terra::writeVector(axis_width,
                          filename = "snowpatch_hollow_width.shp",
                          filetype = "ESRI Shapefile",
                          overwrite = TRUE)
 
-      # 8. Calculate the processing time #
+      # 9. Calculate the processing time #
 
       end_time = Sys.time()
+
       processing_time = as.vector(difftime(end_time,
                                            start_time,
                                            units = "mins"))
+
       message(paste("End time: ", end_time, sep = ""))
+
       message(paste("Processing time: ", round(processing_time, digits = 2), " mins.", sep =""))
 
       # 10. Add the results to the current environment
