@@ -419,8 +419,11 @@ SHME_axes_related_metrics = function(dem,
       axis = terra::subset(axis,
                            as.vector(terra::relate(axis, axis_length[i], relation = "crosses")) == TRUE)}
     if(i == 1){
+      width_m = sqrt((terra::xmax(axis) - terra::xmin(axis))^2 + (terra::ymax(axis) - terra::ymin(axis))^2)
       axis_width = axis
     } else {
+      width_m = c(width_m,
+                  width_m = sqrt((terra::xmax(axis) - terra::xmin(axis))^2 + (terra::ymax(axis) - terra::ymin(axis))^2))
       axis_width = rbind(axis_width,
                          axis)
     }
@@ -448,7 +451,7 @@ SHME_axes_related_metrics = function(dem,
 
       snowpatch_hollow_metrics_2 = data.frame(cbind(ID,
                                                     terra::perim(axis_length),
-                                                    terra::perim(axis_width),
+                                                    width_m,
                                                     axis_height,
                                                     terra::perim(axis_length)/terra::perim(axis_width),
                                                     axis_azimuth,
